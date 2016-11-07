@@ -1,51 +1,50 @@
 package main
 
 import (
-        "fmt"
 	"flag"
-        "net"
-        "os"
+	"fmt"
+	"net"
+	"os"
 )
 
-
 func CheckError(err error) {
-        if err != nil {
-                fmt.Println("Error: ", err)
-                os.Exit(1)
-        }
+	if err != nil {
+		fmt.Println("Error: ", err)
+		os.Exit(1)
+	}
 }
 
-func Response(sConn net.UDPConn, buf []byte, addr *net.UDPAddr, target string){
+func Response(sConn net.UDPConn, buf []byte, addr *net.UDPAddr, target string) {
 	//Request to Sserver
-        ServerAddr, _ := net.ResolveUDPAddr("udp", target)
-        LocalAddr, _ := net.ResolveUDPAddr("udp", ":0")
-        Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
-	if err != nil{
-                fmt.Println("Error: ", err)
+	ServerAddr, _ := net.ResolveUDPAddr("udp", target)
+	LocalAddr, _ := net.ResolveUDPAddr("udp", ":0")
+	Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
+	if err != nil {
+		fmt.Println("Error: ", err)
 		return
 	}
-        defer Conn.Close()
+	defer Conn.Close()
 
-        _, err = Conn.Write(buf)
-        buf = make([]byte, 1024)
-        n, err := Conn.Read(buf)
+	_, err = Conn.Write(buf)
+	buf = make([]byte, 1024)
+	n, err := Conn.Read(buf)
 
-	if err != nil{
-                fmt.Println("Error: ", err)
+	if err != nil {
+		fmt.Println("Error: ", err)
 		return
 	}
 
 	//Modify LI flag
-        buf[0] = buf[0] & 077 // binary 0011 1111
+	buf[0] = buf[0] & 077 // binary 0011 1111
 
 	//Response to Client
-        sConn.WriteToUDP(buf[0:n], addr)
+	sConn.WriteToUDP(buf[0:n], addr)
 }
 
 func main() {
 	const ntpPort = "123"
-	var host string   = ""
-	var verbose bool  = false
+	var host string = ""
+	var verbose bool = false
 
 	flag.BoolVar(&verbose, "v", false, "Verbose")
 	flag.Parse()
@@ -57,26 +56,26 @@ func main() {
 	}
 	host = flag.Args()[0]
 
-        ProxyAddr, err := net.ResolveUDPAddr("udp", ":" + ntpPort)
-        CheckError(err)
+	ProxyAddr, err := net.ResolveUDPAddr("udp", ":"+ntpPort)
+	CheckError(err)
 
-        ServerConn, err := net.ListenUDP("udp", ProxyAddr)
-        CheckError(err)
+	ServerConn, err := net.ListenUDP("udp", ProxyAddr)
+	CheckError(err)
 	fmt.Println("Info: Start Proxy on ", ProxyAddr, " to", host)
-        defer ServerConn.Close()
+	defer ServerConn.Close()
 
-        buf := make([]byte, 1024)
-        for {
-                //Recieve from client
-                n, addr, err := ServerConn.ReadFromUDP(buf)
+	buf := make([]byte, 1024)
+	for {
+		//Recieve from client
+		n, addr, err := ServerConn.ReadFromUDP(buf)
 		if verbose {
-                fmt.Println("Received from", addr)
+			fmt.Println("Received from", addr)
 		}
-                if err != nil {
-                        fmt.Println("Error: ", err)
+		if err != nil {
+			fmt.Println("Error: ", err)
 			continue
-                }
-                go Response(*ServerConn, buf[0:n] , addr, host + ":" + ntpPort)
-        }
+		}
+		go Response(*ServerConn, buf[0:n], addr, host+":"+ntpPort)
+	}
 
 }
