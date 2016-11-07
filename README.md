@@ -1,6 +1,8 @@
 # unset-leap-indicator-proxy
 unset-leap-indicator-proxy is UDP proxy that unsets leap indicator flag of a NTP packets.
 
+This is toy server. You should not use this in production environment.
+
 # overview
 UDPパケットをプロキシします。NTPパケットをパースはしませんが、ただ上位2bitを上書きし Leap Indicatorを0に上書きします。
 
