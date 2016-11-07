@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 )
 
 func CheckError(err error) {
@@ -23,6 +24,8 @@ func Response(sConn net.UDPConn, buf []byte, addr *net.UDPAddr, target string) {
 		fmt.Println("Error: ", err)
 		return
 	}
+	Conn.SetReadDeadline(time.Now().Add(1 * time.Second))
+	Conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
 	defer Conn.Close()
 
 	_, err = Conn.Write(buf)
